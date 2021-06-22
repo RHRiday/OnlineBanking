@@ -1,4 +1,33 @@
-<?php include 'connection/connect.php'; ?>
+<?php include 'connection/connect.php';
+
+// $conn = mysqli_connect("localhost", "root", "", "register");
+$sql = "SELECT * FROM transfer WHERE status='0';";
+$result = mysqli_query($conn, $sql);
+$user = $_SESSION['username'];
+
+for($i=0; $i<mysqli_num_rows($result); $i++){
+  if(isset($_POST['action'.$i])){
+    $sender = $_POST['sender'];
+    $reciever = $_POST['reciever'];
+    $id = $_POST['id'];
+
+    if($_POST['action'.$i]=="Accept"){
+      $senderData = mysqli_fetch_array(mysqli_query($conn,"SELECT balance FROM user WHERE acc_no='$sender';"));
+      $senderNewBal = $senderData['balance'] - $_POST['amount'];
+      $recieverData = mysqli_fetch_array(mysqli_query($conn,"SELECT balance FROM user WHERE acc_no='$reciever';"));
+      $recieverNewBal = $recieverData['balance'] + $_POST['amount'];
+  
+      $query1 = mysqli_query($conn, "UPDATE user SET balance='$recieverNewBal' WHERE acc_no='$reciever';");
+      $query1 = mysqli_query($conn, "UPDATE user SET balance='$senderNewBal' WHERE acc_no='$sender';");
+      $query3 = mysqli_query($conn, "UPDATE transfer SET status='1', action_by='$user' WHERE ID='$id';");
+      
+    }else{
+      $query3 = mysqli_query($conn, "UPDATE transfer SET status='-1', action_by='$user' WHERE ID='$id';");
+    }
+  }else{}
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
@@ -31,19 +60,35 @@
                 <th style="width: 20%">Reciever</th>
                 <th style="width: 20%">Transfer amount</th>
                 <th style="width: 20%">Transaction Date</th>
+                <th style="width: 20%">Action</th>
               </tr>
-              <?php
-              $conn = mysqli_connect("localhost", "root", "", "register");
-              $sql = "SELECT * FROM transfer;";
-              $result = mysqli_query($conn, $sql);
 
+              <?php
+              $sql = "SELECT * FROM transfer WHERE status='0';";
+              $result = mysqli_query($conn, $sql);
+              $c =0;
               while($rows = mysqli_fetch_assoc($result)){
                 echo "<tr><td style='font-size: 12pt; height: 22px; padding: 5px 7px;'>".$rows['ID']."</td>
                       <td style='font-size: 12pt; height: 22px; padding: 5px 7px;'>".$rows['sender']."</td>
                       <td style='font-size: 12pt; height: 22px; padding: 5px 7px;'>".$rows['reciever']."</td>
                       <td style='font-size: 12pt; height: 22px; padding: 5px 7px;'>".$rows['amount']."</td>
-                      <td style='font-size: 12pt; height: 22px; padding: 5px 7px;'>".$rows['trans_date']."</td></tr>";
-              } ?>
+                      <td style='font-size: 12pt; height: 22px; padding: 5px 7px;'>".$rows['trans_date']."</td>
+                      <td style='font-size: 12pt; height: 22px; padding: 5px 7px;'>
+                        <form action='1.1.3.transaction.php' method='POST'>
+                          <input type='hidden' value='".$rows['sender']."' name='sender'>
+                          <input type='hidden' value='".$rows['reciever']."' name='reciever'>
+                          <input type='hidden' value='".$rows['amount']."' name='amount'>
+                          <input type='hidden' value='".$rows['ID']."' name='id'>
+                          <input type='submit' value='Accept' name='action".$c."'>
+                          <input type='submit' value='Deny' name='action".$c."'>
+                        </form>
+                      </td></tr>";
+                      $c++;
+              } 
+              if(mysqli_num_rows($result)<1){
+                echo "<tr> <td colspan='6' style='text-align:center; background-color:#ff646480'>No transaction left to view</td></tr>";
+              }
+              ?>
 
             </table>
         </div>
