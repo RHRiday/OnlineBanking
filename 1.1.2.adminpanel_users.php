@@ -33,7 +33,7 @@
                 <th style="width: 10%">Last transaction (amount)</th>
               </tr>
               <?php
-              $conn = mysqli_connect("localhost", "root", "", "register");
+              // $conn = mysqli_connect("localhost", "root", "", "register");
               $sql = "SELECT * FROM user;";
               $result = mysqli_query($conn, $sql);
 
